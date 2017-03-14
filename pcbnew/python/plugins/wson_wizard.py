@@ -62,18 +62,18 @@ class WSONGridArray(PA.PadArray):
     def AddPadsToModule(self, dc):
 
         pin1posX = self.centre.x - self.px * (self.nx - 1) / 2
-        pin1posY = self.centre.y - self.py * (self.ny - 1) / 2
+        pin1posY = self.centre.y + self.py * (self.ny - 1) / 2
 
         for x in range(0, self.nx):
             posX = pin1posX + (x * self.px)
 
             for y in range(self.ny):
                 if x == 0 and y == 0:
-                    posY = pin1posY + (self.py * y) + self.yoff/2
+                    posY = pin1posY - (self.py * y) - self.yoff/2
                     pos = dc.TransformPoint(posX, posY)
                     pad = self.GetPad(True, pos)
                 else:
-                    posY = pin1posY + (self.py * y)
+                    posY = pin1posY - (self.py * y)
                     pos = dc.TransformPoint(posX, posY)
                     pad = self.GetPad(False, pos)                    
                 pad.SetPadName(self.GetName(x,y))
