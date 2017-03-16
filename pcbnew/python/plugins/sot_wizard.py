@@ -18,7 +18,45 @@ from __future__ import division
 import pcbnew
 
 import HelpfulFootprintWizardPlugin as HFPW
+import FootprintWizardDrawingAids as FWDA
 import PadArray as PA
+
+
+class SOTGridArray(PA.PadArray):
+    
+    def __init__(self, pad, nx, ny, px, py, centre=pcbnew.wxPoint(0, 0)):
+        PA.PadArray.__init__(self)
+        # this pad is more of a "context", we will use it as a source of
+        # pad data, but not actually add it
+        self.pad = pad
+        self.nx = int(nx)
+        self.ny = int(ny)
+        self.px = px
+        self.py = py
+        self.centre = centre
+
+    # right to left, top to bottom
+    def NamingFunction(self, x, y):
+        if y==0:
+            return x+1
+        else:
+            return self.nx*2-x
+
+    #relocate the pad and add it as many times as we need
+    def AddPadsToModule(self, dc):
+
+        pin1posX = self.centre.x - self.px * (self.nx - 1) / 2
+        pin1posY = self.centre.y + self.py * (self.ny - 1) / 2
+
+        for x in range(0, self.nx):
+            posX = pin1posX + (x * self.px)
+
+            for y in range(self.ny):
+                posY = pin1posY - (self.py * y)
+                pos = dc.TransformPoint(posX, posY)
+                pad = self.GetPad(False, pos)                    
+                pad.SetPadName(self.GetName(x,y))
+                self.AddPad(pad)
 
 
 class SOTWizard(HFPW.HelpfulFootprintWizardPlugin):
@@ -91,14 +129,14 @@ class SOTWizard(HFPW.HelpfulFootprintWizardPlugin):
         # add in the pads
         pad = self.GetPad()
         pad_row_spacing_handsolder = pad_row_spacing+pad_handsolder
-        array = PA.PadGridArray(pad, pad_num_pads/2, 2, pad_pitch, pad_row_spacing_handsolder)
+        array = SOTGridArray(pad, pad_num_pads/2, 2, pad_pitch, pad_row_spacing_handsolder)
         array.AddPadsToModule(self.draw)
 
         # draw silk screen
         ssx = body_length+body_x_margin*2
         ssy = body_width+body_y_margin*2
         #self.draw.Box(0, 0, ssx, ssy)
-        self.draw.BoxWithDiagonalAtCorner(0, 0, ssx, ssy, pad_width/2, 0)
+        self.draw.BoxWithDiagonalAtCorner(x=0, y=0, w=ssx, h=ssy, setback=pad_width/2, flip=self.draw.flipY)
         
         # Courtyard
         self.draw.SetLayer(pcbnew.F_CrtYd)

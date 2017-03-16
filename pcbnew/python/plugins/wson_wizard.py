@@ -36,21 +36,6 @@ class WSONGridArray(PA.PadArray):
         self.py = py
         self.centre = centre
 
-    # handy utility function 1 - A, 2 - B, 26 - AA, etc
-    # aIndex = 0 for 0 - A
-    # alphabet = set of allowable chars if not A-Z,
-    #            eg ABCDEFGHJKLMNPRTUVWY for BGA
-    def AlphaNameFromNumber(self, n, aIndex=1,
-                            alphabet="ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
-
-        div, mod = divmod(n - aIndex, len(alphabet))
-        alpha = alphabet[mod]
-
-        if div > 0:
-            return self.AlphaNameFromNumber(div, aIndex, alphabet) + alpha
-
-        return alpha
-
     # right to left, top to bottom
     def NamingFunction(self, x, y):
         if y==0:
