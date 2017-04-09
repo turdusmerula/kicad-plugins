@@ -19,6 +19,7 @@ import pcbnew
 
 import HelpfulFootprintWizardPlugin as HFPW
 import PadArray as PA
+import OutlineDrawingAids
 
 
 class RTCWizard(HFPW.HelpfulFootprintWizardPlugin):
@@ -31,6 +32,8 @@ class RTCWizard(HFPW.HelpfulFootprintWizardPlugin):
     body_length_key = 'length'
     body_x_margin_key = 'x margin'
     body_y_margin_key = 'y margin'
+    body_clearance_key = 'pad clearance'
+    body_minlength_key = 'segment min length'
     
     def GetName(self):
         return "RTC"
@@ -51,6 +54,8 @@ class RTCWizard(HFPW.HelpfulFootprintWizardPlugin):
         self.AddParam("Body", self.body_length_key, self.uMM, 2)
         self.AddParam("Body", self.body_x_margin_key, self.uMM, 0.1)
         self.AddParam("Body", self.body_y_margin_key, self.uMM, 0.1)
+        self.AddParam("Body", self.body_clearance_key, self.uMM, 0.2)
+        self.AddParam("Body", self.body_minlength_key, self.uMM, 0.2)
 
     def CheckParameters(self):
         None
@@ -80,6 +85,8 @@ class RTCWizard(HFPW.HelpfulFootprintWizardPlugin):
         body_length = body[self.body_length_key]
         body_x_margin = body[self.body_x_margin_key]
         body_y_margin = body[self.body_y_margin_key]
+        body_clearance = body[self.body_clearance_key]
+        body_minlength = body[self.body_minlength_key]
         
         # add in the pads
         pad = self.GetPad()
@@ -88,9 +95,13 @@ class RTCWizard(HFPW.HelpfulFootprintWizardPlugin):
         array.AddPadsToModule(self.draw)
 
         # draw silk screen
+        self.draw.SetLayer(pcbnew.F_SilkS)
         ssx = body_length+body_x_margin*2
         ssy = body_width+body_y_margin*2
         self.draw.Box(0, 0, ssx, ssy)
+        outline = OutlineDrawingAids.OutlineDrawingAids(self)
+        outline.Box(x=0, y=0, w=ssx, h=ssy, 
+                    clearance=body_clearance, minlength=body_minlength)        
 
         # Courtyard
         self.draw.SetLayer(pcbnew.F_CrtYd)

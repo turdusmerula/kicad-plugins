@@ -180,3 +180,23 @@ class OutlineDrawingAids:
             self.draw.Line(l[0][0], l[0][1], l[1][0], l[1][1])
 
         self.draw.PopTransform()
+
+    def Box(self, x, y, w, h):
+        """
+        Draw a rectangular box, centred at (x,y), with given width and
+        height
+        """
+
+        pts = [[x - w/2, y - h/2],  # left
+               [x + w/2, y - h/2],  # right
+               [x + w/2, y + h/2],  # bottom
+               [x - w/2, y + h/2]]  # top
+
+        lines = [[pts[0], pts[1]],
+                 [pts[1], pts[2]],
+                 [pts[2], pts[3]],
+                 [pts[3], pts[0]]]
+
+        self.RemovePadsIntersections(lines, clearance, minlength)
+
+        self.Polyline(pts)

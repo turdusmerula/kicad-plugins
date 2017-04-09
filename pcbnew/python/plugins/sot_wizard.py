@@ -20,6 +20,7 @@ import pcbnew
 import HelpfulFootprintWizardPlugin as HFPW
 import FootprintWizardDrawingAids as FWDA
 import PadArray as PA
+import OutlineDrawingAids
 
 
 class SOTGridArray(PA.PadArray):
@@ -71,6 +72,8 @@ class SOTWizard(HFPW.HelpfulFootprintWizardPlugin):
     body_length_key = 'length'
     body_x_margin_key = 'x margin'
     body_y_margin_key = 'y margin'
+    body_clearance_key = 'pad clearance'
+    body_minlength_key = 'segment min length'
     
     def GetName(self):
         return "SOT"
@@ -93,6 +96,8 @@ class SOTWizard(HFPW.HelpfulFootprintWizardPlugin):
         self.AddParam("Body", self.body_length_key, self.uMM, 1.60)
         self.AddParam("Body", self.body_x_margin_key, self.uMM, 0.1)
         self.AddParam("Body", self.body_y_margin_key, self.uMM, 0.1)
+        self.AddParam("Body", self.body_clearance_key, self.uMM, 0.2)
+        self.AddParam("Body", self.body_minlength_key, self.uMM, 0.2)
 
     def CheckParameters(self):
         self.CheckParamInt(
@@ -125,6 +130,8 @@ class SOTWizard(HFPW.HelpfulFootprintWizardPlugin):
         body_length = body[self.body_length_key]
         body_x_margin = body[self.body_x_margin_key]
         body_y_margin = body[self.body_y_margin_key]
+        body_clearance = body[self.body_clearance_key]
+        body_minlength = body[self.body_minlength_key]
         
         # add in the pads
         pad = self.GetPad()
@@ -133,11 +140,14 @@ class SOTWizard(HFPW.HelpfulFootprintWizardPlugin):
         array.AddPadsToModule(self.draw)
 
         # draw silk screen
+        self.draw.SetLayer(pcbnew.F_SilkS)
         ssx = body_length+body_x_margin*2
         ssy = body_width+body_y_margin*2
-        #self.draw.Box(0, 0, ssx, ssy)
-        self.draw.BoxWithDiagonalAtCorner(x=0, y=0, w=ssx, h=ssy, setback=pad_width/2, flip=self.draw.flipY)
-        
+        outline = OutlineDrawingAids.OutlineDrawingAids(self)
+        outline.BoxWithDiagonalAtCorner(x=0, y=0, w=ssx, h=ssy, 
+                                        setback=pad_width/2, flip=self.draw.flipY, 
+                                        clearance=body_clearance, minlength=body_minlength)        
+
         # Courtyard
         self.draw.SetLayer(pcbnew.F_CrtYd)
         self.draw.Box(0, 0, ssx, ssy)
