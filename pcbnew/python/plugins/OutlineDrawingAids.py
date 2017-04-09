@@ -181,7 +181,8 @@ class OutlineDrawingAids:
 
         self.draw.PopTransform()
 
-    def Box(self, x, y, w, h):
+    def Box(self, x, y, w, h,
+            clearance=pcbnew.FromMM(0.2), minlength=pcbnew.FromMM(0.2)):
         """
         Draw a rectangular box, centred at (x,y), with given width and
         height
@@ -199,4 +200,5 @@ class OutlineDrawingAids:
 
         self.RemovePadsIntersections(lines, clearance, minlength)
 
-        self.Polyline(pts)
+        for l in lines:
+            self.draw.Line(l[0][0], l[0][1], l[1][0], l[1][1])

@@ -90,17 +90,18 @@ class NEOWizard(HFPW.HelpfulFootprintWizardPlugin):
         return "NEO"
 
     def GenerateParameterList(self):
+        # see MAX7-NEO7_HIM_(UBX-13003704).pdf page 19
         self.AddParam("Pads", self.pad_num_pads_key, self.uNatural, 24)
         self.AddParam("Pads", self.pad_width_key, self.uMM, 0.8)
-        self.AddParam("Pads", self.pad_length_key, self.uMM, 0.9)
+        self.AddParam("Pads", self.pad_length_key, self.uMM, 1.8)
         self.AddParam("Pads", self.pad_pitch_key, self.uMM, 1.1)
         self.AddParam("Pads", self.pad_pitch2_key, self.uMM, 3.0)
-        self.AddParam("Pads", self.pad_row_spacing_key, self.uMM, 12.2-0.9/2)
+        self.AddParam("Pads", self.pad_row_spacing_key, self.uMM, 12.2-0.4)
         self.AddParam("Pads", self.pad_handsolder_key, self.uMM, 0)
         
         self.AddParam("Body", self.body_width_key, self.uMM, 12.2)
         self.AddParam("Body", self.body_length_key, self.uMM, 16.0)
-        self.AddParam("Body", self.body_x_margin_key, self.uMM, 0.1)
+        self.AddParam("Body", self.body_x_margin_key, self.uMM, 0.3)
         self.AddParam("Body", self.body_y_margin_key, self.uMM, 0.1)
         self.AddParam("Body", self.body_clearance_key, self.uMM, 0.2)
         self.AddParam("Body", self.body_minlength_key, self.uMM, 0.2)
@@ -146,18 +147,19 @@ class NEOWizard(HFPW.HelpfulFootprintWizardPlugin):
         array = NEOGridArray(pad, pad_num_pads/2, pad_pitch, pad_pitch2, pad_row_spacing_handsolder)
         array.AddPadsToModule(self.draw)
 
-        # draw silk screen
-        self.draw.SetLayer(pcbnew.F_SilkS)
+        # body size
         ssx = body_length+body_x_margin*2
         ssy = body_width+body_y_margin*2
-        self.draw.BoxWithDiagonalAtCorner(x=0, y=0, w=ssx, h=ssy, setback=pad_width/2, flip=self.draw.flipY)
-        outline = OutlineDrawingAids.OutlineDrawingAids(self)
-        outline.Box(x=0, y=0, w=ssx, h=ssy, 
-                    clearance=body_clearance, minlength=body_minlength)        
 
         # Courtyard
         self.draw.SetLayer(pcbnew.F_CrtYd)
-        self.draw.Box(0, 0, ssx, ssy)
+        self.draw.Box(x=0, y=0, w=ssx, h=ssy)        
+
+        # draw silk screen
+        self.draw.SetLayer(pcbnew.F_SilkS)
+        outline = OutlineDrawingAids.OutlineDrawingAids(self)
+        outline.Box(x=0, y=0, w=ssx, h=ssy, 
+                    clearance=body_clearance, minlength=body_minlength)
         
         #reference and value
         text_size = self.GetTextSize()  # IPC nominal

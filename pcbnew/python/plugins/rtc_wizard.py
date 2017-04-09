@@ -94,18 +94,20 @@ class RTCWizard(HFPW.HelpfulFootprintWizardPlugin):
         array = PA.PadGridArray(pad, 2, 1, pad_pitch_handolder, 0)
         array.AddPadsToModule(self.draw)
 
-        # draw silk screen
-        self.draw.SetLayer(pcbnew.F_SilkS)
+        # body size
         ssx = body_length+body_x_margin*2
         ssy = body_width+body_y_margin*2
-        self.draw.Box(0, 0, ssx, ssy)
-        outline = OutlineDrawingAids.OutlineDrawingAids(self)
-        outline.Box(x=0, y=0, w=ssx, h=ssy, 
-                    clearance=body_clearance, minlength=body_minlength)        
 
         # Courtyard
         self.draw.SetLayer(pcbnew.F_CrtYd)
         self.draw.Box(0, 0, ssx, ssy)
+
+        # draw silk screen
+        self.draw.SetLayer(pcbnew.F_SilkS)
+        self.draw.Box(0, 0, ssx, ssy)
+        outline = OutlineDrawingAids.OutlineDrawingAids(self)
+        outline.Box(x=0, y=0, w=ssx, h=ssy, 
+                    clearance=body_clearance, minlength=body_minlength)        
 
         #reference and value
         text_size = self.GetTextSize()  # IPC nominal

@@ -139,19 +139,21 @@ class TSSOPWizard(HFPW.HelpfulFootprintWizardPlugin):
         array = TSSOPGridArray(pad, pad_num_pads/2, 2, pad_pitch, pad_row_spacing_handsolder)
         array.AddPadsToModule(self.draw)
 
-        # draw silk screen
-        self.draw.SetLayer(pcbnew.F_SilkS)
+        # body size
         ssx = body_length+body_x_margin*2
         ssy = body_width+body_y_margin*2
-        outline = OutlineDrawingAids.OutlineDrawingAids(self)
-        outline.BoxWithDiagonalAtCorner(x=0, y=0, w=ssx, h=ssy, 
-                                        setback=pad_width/2, flip=self.draw.flipY, 
-                                        clearance=body_clearance, minlength=body_minlength)        
         
         # Courtyard
         self.draw.SetLayer(pcbnew.F_CrtYd)
         self.draw.Box(0, 0, ssx, ssy)
 
+        # draw silk screen
+        self.draw.SetLayer(pcbnew.F_SilkS)
+        outline = OutlineDrawingAids.OutlineDrawingAids(self)
+        outline.BoxWithDiagonalAtCorner(x=0, y=0, w=ssx, h=ssy, 
+                                        setback=pad_width/2, flip=self.draw.flipY, 
+                                        clearance=body_clearance, minlength=body_minlength)        
+        
         #reference and value
         text_size = self.GetTextSize()  # IPC nominal
         self.draw.Value(0, -ssy/2-text_size, text_size)
