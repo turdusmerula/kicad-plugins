@@ -1,0 +1,115 @@
+#!/bin/bash
+
+xpl_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+
+function usage() {
+	echo "$(basename $0) <netfile.net> <module.sch> <board.kicad_pcb> [<output path>]" >&2
+	echo "Takes a net files, a module schematic and its board template and create boards elements inside output path" >&2
+	echo "You can then import modules elements inside your board" >&2
+}
+
+if [[ $# -lt 3 ]] || [[ $# -gt 4 ]]
+then
+	usage
+	exit 1
+fi
+
+netfile=$1
+module=$2
+board=$3
+
+output=$(mktemp -d)
+
+if [[ $# -eq 4 ]]
+then
+	path=$4
+else
+	path=.
+fi
+
+if [ ! -f ${netfile} ]
+then
+	echo "$(basename $0): ${netfile} not found" >&2
+	exit 1 
+fi
+
+if [ ! -f ${module} ]
+then
+	echo "$(basename $0): ${module} not found" >&2
+	exit 1 
+fi
+
+if [ ! -f ${board} ]
+then
+	echo "$(basename $0): ${board} not found" >&2
+	exit 1 
+fi
+
+if [ ! -d ${path} ]
+then
+	echo "$(basename $0): ${path} does not exist" >&2
+	exit 1 
+fi
+
+function netfile_exist_component() {
+	component=$1
+	if [[ "_$(grep $component ${netfile})" != "_" ]]
+	then
+		return 0
+	fi
+	return 1
+}
+
+function netfile_get_component() {
+	component=$1
+	cat ${netfile} | tac | awk "/ $component/,/\(comp / { print }" | tac
+}
+
+function netfile_get_sheet_name() {
+	sheet=$1
+	grep -e "(sheet .* /$sheet/)" ${netfile} | sed "s#.* (name /\(.*\)/) (.*#\1#g"
+}
+
+echo "Reading ${board}"
+
+# get list of components
+grep "(path" ${board} | sed -e "s#.*(path \(.*\))#\1#g"  > $output/components
+# remove sheet informations if has some
+sed -i -e "s#/.*/\(.*\)#\1#g" $output/components
+
+echo " -> Found $(cat $output/components | wc -l) component(s)"
+
+echo "Reading ${netfile}"
+exec 4<$output/components
+while read id <&4; do
+	if [[ $(netfile_exist_component $id) -ne 0 ]]
+	then
+		echo "$(basename $0): component $id not found in ${netfile}" >&2
+		exit 1
+	fi
+	
+	# read sheets corresponding to component
+	netfile_get_component $id | grep "sheetpath " | sed "s#.*(tstamps /\(.*\)/.*#\1#g" >> $output/tmpsheets
+done
+
+cat $output/tmpsheets | sort | uniq > $output/sheets
+
+echo " -> Module found in $(cat $output/sheets | wc -l) sheet(s)"
+echo "Create boards:"
+exec 4<$output/sheets
+while read id <&4; do
+	name=$(netfile_get_sheet_name $id)
+	echo " -> create file '$path/$name.kcad_pcb' for sheet $id"
+	
+	newboard=$path/$name.kcad_pcb
+	cp -f $board $newboard
+	
+	# remove sheet informations if has some
+	sed -i -e "s#\(.*(path \)/.*/\(.*)\)#\1\2#g" $newboard
+	# set components to module
+	sed -i -e "s#\(.*(path \)\(.*)\)#\1/$id/\2#g" $newboard
+done
+
+echo "Done"
+
+rm -rf $output
