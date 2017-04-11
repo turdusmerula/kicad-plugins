@@ -85,17 +85,17 @@ class TSSOPWizard(HFPW.HelpfulFootprintWizardPlugin):
         return "TSSOP"
 
     def GenerateParameterList(self):
-        self.AddParam("Pads", self.pad_num_pads_key, self.uNatural, 6)
-        self.AddParam("Pads", self.pad_width_key, self.uMM, 0.28)
-        self.AddParam("Pads", self.pad_length_key, self.uMM, 0.75)
-        self.AddParam("Pads", self.pad_pitch_key, self.uMM, 0.5)
-        self.AddParam("Pads", self.pad_row_spacing_key, self.uMM, 1.15)
+        self.AddParam("Pads", self.pad_num_pads_key, self.uNatural, 8)
+        self.AddParam("Pads", self.pad_width_key, self.uMM, 0.45)
+        self.AddParam("Pads", self.pad_length_key, self.uMM, 1.45)
+        self.AddParam("Pads", self.pad_pitch_key, self.uMM, 0.65)
+        self.AddParam("Pads", self.pad_row_spacing_key, self.uMM, 5.90)
         self.AddParam("Pads", self.pad_handsolder_key, self.uMM, 0)
         
-        self.AddParam("Body", self.body_width_key, self.uMM, 1.20)
-        self.AddParam("Body", self.body_length_key, self.uMM, 1.60)
+        self.AddParam("Body", self.body_width_key, self.uMM, 4.40)
+        self.AddParam("Body", self.body_length_key, self.uMM, 3)
         self.AddParam("Body", self.body_x_margin_key, self.uMM, 0.1)
-        self.AddParam("Body", self.body_y_margin_key, self.uMM, 0.1)
+        self.AddParam("Body", self.body_y_margin_key, self.uMM, -0.2)
         self.AddParam("Body", self.body_clearance_key, self.uMM, 0.2)
         self.AddParam("Body", self.body_minlength_key, self.uMM, 0.2)
 

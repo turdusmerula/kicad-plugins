@@ -18,58 +18,15 @@ from __future__ import division
 import pcbnew
 
 import HelpfulFootprintWizardPlugin as HFPW
-import FootprintWizardDrawingAids as FWDA
 import PadArray as PA
 import OutlineDrawingAids
 
 
-class NEOGridArray(PA.PadArray):
-    
-    def __init__(self, pad, nx, px, px2, py, centre=pcbnew.wxPoint(0, 0)):
-        PA.PadArray.__init__(self)
-        # this pad is more of a "context", we will use it as a source of
-        # pad data, but not actually add it
-        self.pad = pad
-        self.nx = int(nx)
-        self.ny = 2
-        self.px = px
-        self.px2 = px2
-        self.py = py
-        self.centre = centre
-
-    # right to left, top to bottom
-    def NamingFunction(self, x, y):
-        if y==0:
-            return x+1
-        else:
-            return self.nx*2-x
-
-    #relocate the pad and add it as many times as we need
-    def AddPadsToModule(self, dc):
-
-        pin1posX = self.centre.x - ( self.px * (self.nx - 1) +  self.px2 ) / 2
-        pin1posY = self.centre.y + self.py * (self.ny - 1) / 2
-
-        for x in range(0, self.nx):
-            if x>6 and x<17:
-                posX = pin1posX + (x * self.px) + self.px2 
-            else:
-                posX = pin1posX + (x * self.px)
-            
-            for y in range(self.ny):
-                posY = pin1posY - (self.py * y)
-                pos = dc.TransformPoint(posX, posY)
-                pad = self.GetPad(False, pos)                    
-                pad.SetPadName(self.GetName(x,y))
-                self.AddPad(pad)
-
-
-class NEOWizard(HFPW.HelpfulFootprintWizardPlugin):
+class TQFPWizard(HFPW.HelpfulFootprintWizardPlugin):
     pad_num_pads_key = 'pads count'
     pad_width_key = 'pad width'
     pad_length_key = 'pad length'
     pad_pitch_key = 'pad pitch'
-    pad_pitch2_key = 'pad pitch2'
     pad_row_spacing_key = 'row spacing'
     pad_handsolder_key = 'hand solder margin'
 
@@ -81,27 +38,25 @@ class NEOWizard(HFPW.HelpfulFootprintWizardPlugin):
     body_minlength_key = 'segment min length'
     
     def GetName(self):
-        return "NEO"
+        return "TQFP"
 
     def GetDescription(self):
-        return "NEO footprint wizard"
+        return "TQFP footprint wizard"
 
     def GetValue(self):
-        return "NEO"
+        return "TQFP"
 
     def GenerateParameterList(self):
-        # see MAX7-NEO7_HIM_(UBX-13003704).pdf page 19
-        self.AddParam("Pads", self.pad_num_pads_key, self.uNatural, 24)
-        self.AddParam("Pads", self.pad_width_key, self.uMM, 0.8)
-        self.AddParam("Pads", self.pad_length_key, self.uMM, 1.8)
-        self.AddParam("Pads", self.pad_pitch_key, self.uMM, 1.1)
-        self.AddParam("Pads", self.pad_pitch2_key, self.uMM, 3.0)
-        self.AddParam("Pads", self.pad_row_spacing_key, self.uMM, 12.2-0.4)
+        self.AddParam("Pads", self.pad_num_pads_key, self.uNatural, 44)
+        self.AddParam("Pads", self.pad_width_key, self.uMM, 0.54)
+        self.AddParam("Pads", self.pad_length_key, self.uMM, 0.80)
+        self.AddParam("Pads", self.pad_pitch_key, self.uMM, 0.80)
+        self.AddParam("Pads", self.pad_row_spacing_key, self.uMM, 11.8)
         self.AddParam("Pads", self.pad_handsolder_key, self.uMM, 0)
         
-        self.AddParam("Body", self.body_width_key, self.uMM, 12.2)
-        self.AddParam("Body", self.body_length_key, self.uMM, 16.0)
-        self.AddParam("Body", self.body_x_margin_key, self.uMM, 0.3)
+        self.AddParam("Body", self.body_width_key, self.uMM, 10)
+        self.AddParam("Body", self.body_length_key, self.uMM, 10)
+        self.AddParam("Body", self.body_x_margin_key, self.uMM, 0.1)
         self.AddParam("Body", self.body_y_margin_key, self.uMM, 0.1)
         self.AddParam("Body", self.body_clearance_key, self.uMM, 0.2)
         self.AddParam("Body", self.body_minlength_key, self.uMM, 0.2)
@@ -111,15 +66,15 @@ class NEOWizard(HFPW.HelpfulFootprintWizardPlugin):
             "Pads", '*' + self.pad_num_pads_key,
             is_multiple_of=2)
     
-    def GetPad(self):
+    def GetPad(self, rot_degree=0):
         pad_length = self.parameters["Pads"][self.pad_length_key]
         pad_width = self.parameters["Pads"][self.pad_width_key]
         pad_handsolder = self.parameters["Pads"][self.pad_handsolder_key]
         
         pad_length_hansolder = pad_length+pad_handsolder
         return PA.PadMaker(self.module).SMDPad(
-            pad_length_hansolder, pad_width, 
-            shape=pcbnew.PAD_SHAPE_RECT)
+            Vsize=pad_length_hansolder, Hsize=pad_width, 
+            shape=pcbnew.PAD_SHAPE_RECT, rot_degree=rot_degree)
 
     def BuildThisFootprint(self):
 
@@ -130,7 +85,6 @@ class NEOWizard(HFPW.HelpfulFootprintWizardPlugin):
         pad_width = pads[self.pad_width_key]
         pad_length = pads[self.pad_length_key]
         pad_pitch = pads[self.pad_pitch_key]
-        pad_pitch2 = pads[self.pad_pitch2_key]
         pad_row_spacing = pads[self.pad_row_spacing_key]
         pad_handsolder = pads[self.pad_handsolder_key]
         
@@ -141,30 +95,49 @@ class NEOWizard(HFPW.HelpfulFootprintWizardPlugin):
         body_clearance = body[self.body_clearance_key]
         body_minlength = body[self.body_minlength_key]
         
-        # add in the pads
-        pad = self.GetPad()
-        pad_row_spacing_handsolder = pad_row_spacing+pad_handsolder
-        array = NEOGridArray(pad, pad_num_pads/2, pad_pitch, pad_pitch2, pad_row_spacing_handsolder)
+        #left row
+        pin1Pos = pcbnew.wxPoint(-pad_row_spacing/2-pad_handsolder/2, 0)
+        array = PA.PadLineArray(self.GetPad(90), pad_num_pads/4, pad_pitch, True, pin1Pos)
+        array.SetFirstPadInArray(1)
         array.AddPadsToModule(self.draw)
 
+        #bottom row
+        pin1Pos = pcbnew.wxPoint(0, pad_row_spacing/2+pad_handsolder/2)
+        array = PA.PadLineArray(self.GetPad(), pad_num_pads/4, pad_pitch, False, pin1Pos)
+        array.SetFirstPadInArray(int(pad_num_pads/4+1))
+        array.AddPadsToModule(self.draw)
+
+        #right row
+        pin1Pos = pcbnew.wxPoint(pad_row_spacing/2+pad_handsolder/2, 0)
+        array = PA.PadLineArray(self.GetPad(90), pad_num_pads/4, -pad_pitch, True, pin1Pos)
+        array.SetFirstPadInArray(int(2*pad_num_pads/4+1))
+        array.AddPadsToModule(self.draw)
+
+        #top row
+        pin1Pos = pcbnew.wxPoint(0, -pad_row_spacing/2-pad_handsolder/2)
+        array = PA.PadLineArray(self.GetPad(), pad_num_pads/4, -pad_pitch, False, pin1Pos)
+        array.SetFirstPadInArray(int(3*pad_num_pads/4+1))
+        array.AddPadsToModule(self.draw)
+        
         # body size
         ssx = body_length+body_x_margin*2
         ssy = body_width+body_y_margin*2
 
         # Courtyard
         self.draw.SetLayer(pcbnew.F_CrtYd)
-        self.draw.Box(x=0, y=0, w=ssx, h=ssy)        
+        self.draw.Box(0, 0, ssx, ssy)
 
         # draw silk screen
         self.draw.SetLayer(pcbnew.F_SilkS)
         outline = OutlineDrawingAids.OutlineDrawingAids(self)
-        outline.Box(x=0, y=0, w=ssx, h=ssy, 
-                    clearance=body_clearance, minlength=body_minlength)
-        
+        outline.BoxWithDiagonalAtCorner(x=0, y=0, w=ssx, h=ssy, 
+                    setback=pad_width/2, 
+                    clearance=body_clearance, minlength=body_minlength)        
+
         #reference and value
         text_size = self.GetTextSize()  # IPC nominal
         self.draw.Value(0, -ssy/2-text_size, text_size)
         self.draw.Reference(0, ssy/2+text_size, text_size)
 
         
-NEOWizard().register()
+TQFPWizard().register()
