@@ -3,9 +3,16 @@
 xpl_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 
 function usage() {
-	echo "$(basename $0) <netfile.net> <module.sch> <board.kicad_pcb> [<output path>]" >&2
-	echo "Takes a net files, a module schematic and its board template and create boards elements inside output path" >&2
-	echo "You can then import modules elements inside your board" >&2
+	echo "$(basename $0) <netfile.net> <module.sch> <module.kicad_pcb> [<output path>]" >&2
+	echo >&2
+	echo "To use the script:" >&2
+	echo " - Create a folder and put the schematic (module.sch) and pcb (module.kicad_pcb) of the module to use" >&2
+	echo " - import the hierarchical sheet inside your project sheet by using relative path" >&2
+	echo " - generate the net file for the project" >&2
+	echo " - use the script to generate the pcb files to import, it will generate a file <name of the hierarchical sheet>.kicad_pcb " >&2
+	echo " - launch a standalone pcbnew" >&2
+	echo " - import the created kicad_pcb file" >&2
+	echo "Note: you need to repeat this operation every time you change something in the source module" >&2
 }
 
 if [[ $# -lt 3 ]] || [[ $# -gt 4 ]]
@@ -76,6 +83,7 @@ echo "Reading ${board}"
 grep "(path" ${board} | sed -e "s#.*(path \(.*\))#\1#g"  > $output/components
 # remove sheet informations if has some
 sed -i -e "s#/.*/\(.*\)#\1#g" $output/components
+sed -i -e "s#/\(.*\)#\1#g" $output/components
 
 echo " -> Found $(cat $output/components | wc -l) component(s)"
 
@@ -101,11 +109,12 @@ while read id <&4; do
 	name=$(netfile_get_sheet_name $id)
 	echo " -> create file '$path/$name.kcad_pcb' for sheet $id"
 	
-	newboard=$path/$name.kcad_pcb
+	newboard=$path/$name.kicad_pcb
 	cp -f $board $newboard
 	
 	# remove sheet informations if has some
 	sed -i -e "s#\(.*(path \)/.*/\(.*)\)#\1\2#g" $newboard
+	sed -i -e "s#\(.*(path \)/\(.*)\)#\1\2#g" $newboard
 	# set components to module
 	sed -i -e "s#\(.*(path \)\(.*)\)#\1/$id/\2#g" $newboard
 done
